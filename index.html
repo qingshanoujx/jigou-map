@@ -202,8 +202,11 @@ function renderMap(){
   numberLabels = [];
   routeArrows = [];
   
-  // 全部/不选择 => 不加载任何标记
-  if(currentLecturer === 'all') return;
+  // 全部 => 显示全部机构点
+  if(currentLecturer === 'all'){
+    renderAll();
+    return;
+  }
   
   var data = teamData[currentLecturer].markers;
   var route = (currentLecturer !== 'all') ? teamData[currentLecturer].route : null;
@@ -256,16 +259,34 @@ function renderMap(){
   });
 }
 
+// 显示全部机构
+function renderAll(){
+  var data = searchIndex;
+  
+  // 标记点
+  data.forEach(function(d, i){
+    var color = d.isWeekend ? '#e74c3c' : '#3498db';
+    var r = d.isWeekend ? 8 : 6;
+    var m = L.circleMarker([d.lat, d.lon],{radius:r,fillColor:color,color:'#fff',weight:1.5,fillOpacity:0.85}).addTo(map);
+    m.bindPopup(d.popup);
+    m._idx = i;
+    markers.push(m);
+  });
+  
+  // 适配所有点
+  if(data.length > 0){
+    var bounds = L.latLngBounds(data.map(function(d){return [d.lat, d.lon]}));
+    map.fitBounds(bounds.pad(0.05));
+  }
+  
+  renderStats();
+  renderList();
+}
+
 // 统计信息
 function renderStats(){
-  if(currentLecturer === 'all'){
-    document.getElementById('stat-inst').textContent = '0';
-    document.getElementById('stat-weekend').textContent = '0';
-    document.getElementById('stat-dist').textContent = '--';
-    return;
-  }
-  var data = teamData[currentLecturer].markers;
-  var td = teamData[currentLecturer];
+  var data = (currentLecturer === 'all') ? searchIndex : teamData[currentLecturer].markers;
+  var td = (currentLecturer !== 'all') ? teamData[currentLecturer] : null;
   
   document.getElementById('stat-inst').textContent = data.length;
   document.getElementById('stat-weekend').textContent = data.filter(function(d){return d.isWeekend}).length;
@@ -276,10 +297,10 @@ function renderStats(){
 function renderList(data){
   if(!data){
     if(currentLecturer === 'all'){
-      document.getElementById('inst-list').innerHTML = '';
-      return;
+      data = searchIndex;
+    } else {
+      data = teamData[currentLecturer].markers;
     }
-    data = teamData[currentLecturer].markers;
   }
   var html = '';
   
@@ -394,4 +415,4 @@ document.addEventListener('DOMContentLoaded', function(){
 });
 </script>
 </body>
-</html><!-- v2 -->
+</html><!-- v3-86437 -->
