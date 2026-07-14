@@ -66,6 +66,7 @@
         <label>&#128269; 讲师团队筛选</label>
         <div class="filter-btns" id="filter-btns"></div>
       </div>
+      <div class="search-section"><input type="text" id="search-input" placeholder="&#128269; 搜索机构名称、城市、负责人..." oninput="onSearch(this.value)"></div>
       <div class="stats-bar" id="stats-bar">
         <div class="stat"><span class="num" id="stat-inst">0</span><span class="lbl">机构</span></div>
         <div class="stat"><span class="num" id="stat-weekend">0</span><span class="lbl">周末场</span></div>
@@ -113,9 +114,63 @@ lecturers.forEach(function(l,i){
   LEC_COLORS[l] = TEAM_COLORS[i % TEAM_COLORS.length];
 });
 
+// 全量搜索索引
+var searchIndex = [];
+lecturers.forEach(function(l){
+  if(teamData[l] && teamData[l].markers){
+    searchIndex = searchIndex.concat(teamData[l].markers);
+  }
+});
+
+// 搜索
+function onSearch(text){
+  var q = text.trim().toLowerCase();
+  if(!q){
+    selectLecturer(currentLecturer);
+    return;
+  }
+  var matches = searchIndex.filter(function(d){
+    return (d.name && d.name.toLowerCase().includes(q)) ||
+           (d.city && d.city.toLowerCase().includes(q)) ||
+           (d.leader && d.leader.toLowerCase().includes(q)) ||
+           (d.lecturer && d.lecturer.toLowerCase().includes(q)) ||
+           (d.contact && d.contact.toLowerCase().includes(q));
+  });
+  
+  // 清理旧标记
+  markers.forEach(function(m){map.removeLayer(m)});
+  numberLabels.forEach(function(m){map.removeLayer(m)});
+  routeArrows.forEach(function(m){map.removeLayer(m)});
+  if(currentPolyline) map.removeLayer(currentPolyline);
+  clearMobileArrows();
+  markers = [];
+  numberLabels = [];
+  routeArrows = [];
+  
+  // 显示匹配标记
+  matches.forEach(function(d, i){
+    var color = d.isWeekend ? '#e74c3c' : '#3498db';
+    var r = d.isWeekend ? 8 : 6;
+    var m = L.circleMarker([d.lat, d.lon],{radius:r,fillColor:color,color:'#fff',weight:1.5,fillOpacity:0.85}).addTo(map);
+    m.bindPopup(d.popup);
+    m._idx = i;
+    markers.push(m);
+  });
+  
+  // 更新统计
+  document.getElementById('stat-inst').textContent = matches.length;
+  document.getElementById('stat-weekend').textContent = matches.filter(function(d){return d.isWeekend}).length;
+  document.getElementById('stat-dist').textContent = '--';
+  
+  // 更新列表
+  renderList(matches);
+}
+
 // 渲染筛选按钮
 function renderFilters(){
-  var html = '<button class="filter-btn all active" onclick="selectLecturer(&apos;all&apos;)">&#127760; 全部('+allMarkers.length+')</button>';
+  var totalCount = 0;
+  for(var k in teamData){totalCount += teamData[k].markers.length;}
+  var html = '<button class="filter-btn all active" onclick="selectLecturer(&apos;all&apos;)">&#127760; 全部('+totalCount+')</button>';
   lecturers.forEach(function(l){
     var cnt = teamData[l].markers.length;
     html += '<button class="filter-btn" onclick="selectLecturer(this.dataset.lec)" data-lec="'+l+'">'+l+'('+cnt+')</button>';
@@ -218,12 +273,14 @@ function renderStats(){
 }
 
 // 机构列表
-function renderList(){
-  if(currentLecturer === 'all'){
-    document.getElementById('inst-list').innerHTML = '';
-    return;
+function renderList(data){
+  if(!data){
+    if(currentLecturer === 'all'){
+      document.getElementById('inst-list').innerHTML = '';
+      return;
+    }
+    data = teamData[currentLecturer].markers;
   }
-  var data = teamData[currentLecturer].markers;
   var html = '';
   
   // 按路线顺序排序（选团队时）或按收益排序（全部时）
