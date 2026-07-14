@@ -81,6 +81,7 @@
         <div class="search-row"><span class="search-label">&#128269; 机构</span><input type="text" id="search-name" placeholder="搜机构名称、城市..." oninput="onSearch()"></div>
         <div class="search-row"><span class="search-label">&#128101; 渠道</span><input type="text" id="search-channel" placeholder="搜渠道经理..." oninput="onSearch()"></div>
         <div class="search-row"><span class="search-label">&#128101; 人员</span><input type="text" id="search-member" placeholder="搜小组成员..." oninput="onSearch()"></div>
+        <div class="search-row"><span class="search-label">&#128197; 日期</span><input type="text" id="search-date" placeholder="搜日期 如: 07/18 或 周六..." oninput="onSearch()"></div>
       </div>
       <div class="stats-bar" id="stats-bar">
         <div class="stat"><span class="num" id="stat-inst">0</span><span class="lbl">机构</span></div>
@@ -242,8 +243,9 @@ function onSearch(){
   var qName = document.getElementById('search-name').value.trim().toLowerCase();
   var qChannel = document.getElementById('search-channel').value.trim().toLowerCase();
   var qMember = document.getElementById('search-member').value.trim().toLowerCase();
+  var qDate = document.getElementById('search-date').value.trim().toLowerCase();
   
-  if(!qName && !qChannel && !qMember){
+  if(!qName && !qChannel && !qMember && !qDate){
     searchResults = null;
     selectLecturer(currentLecturer);
     return;
@@ -254,7 +256,8 @@ function onSearch(){
                                (d.city && d.city.toLowerCase().includes(qName));
     var matchChannel = !qChannel || (d.channel_mgr && d.channel_mgr.toLowerCase().includes(qChannel));
     var matchMember = !qMember || (d.members && d.members.toLowerCase().includes(qMember));
-    return matchName && matchChannel && matchMember;
+    var matchDate = !qDate || (d.date && d.date.toLowerCase().includes(qDate)) || (d.wd && d.wd.toLowerCase().includes(qDate));
+    return matchName && matchChannel && matchMember && matchDate;
   });
   searchResults = matches;
   
