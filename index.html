@@ -406,8 +406,8 @@ document.addEventListener('DOMContentLoaded', function(){
   try {
     toggleSidebar();
     renderFilters();
-    // 默认不加载任何组，选哪个显示哪个
-    console.log('Map ready! Select a team to begin.');
+    selectLecturer('all');  // 默认显示全部机构
+    console.log('Map ready!');
   } catch(e) {
     console.error('Map init error:', e);
     document.getElementById('map').innerHTML = '<div style="padding:40px;font-family:sans-serif;text-align:center"><h2 style="color:red">页面加载异常</h2><p style="color:#999">'+e.message+'</p><p>请按 F12 查看控制台错误详情</p></div>';
@@ -415,4 +415,4 @@ document.addEventListener('DOMContentLoaded', function(){
 });
 </script>
 </body>
-</html><!-- v3-86437 -->
+</html>
