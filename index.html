@@ -138,6 +138,7 @@ function selectLecturer(lec){
 
 var currentPolyline = null;
 var routeArrows = [];
+var searchResults = null;  // 搜索结果缓存
 
 function renderMap(){
   markers.forEach(function(m){map.removeLayer(m)});
@@ -200,7 +201,7 @@ function renderStats(){
 }
 
 function renderList(){
-  var data = (currentLecturer === 'all') ? allMarkers : (teamData[currentLecturer] ? teamData[currentLecturer].markers : []);
+  var data = searchResults ? searchResults : ((currentLecturer === 'all') ? allMarkers : (teamData[currentLecturer] ? teamData[currentLecturer].markers : []));
   var html = '';
   
   data.forEach(function(d, i){
@@ -243,6 +244,7 @@ function onSearch(){
   var qMember = document.getElementById('search-member').value.trim().toLowerCase();
   
   if(!qName && !qChannel && !qMember){
+    searchResults = null;
     selectLecturer(currentLecturer);
     return;
   }
@@ -254,6 +256,7 @@ function onSearch(){
     var matchMember = !qMember || (d.members && d.members.toLowerCase().includes(qMember));
     return matchName && matchChannel && matchMember;
   });
+  searchResults = matches;
   
   // Clear old markers
   markers.forEach(function(m){map.removeLayer(m)});
