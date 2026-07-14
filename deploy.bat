@@ -16,8 +16,12 @@ if %ERRORLEVEL% NEQ 0 (
 )
 
 echo.
-echo [2/3] 复制到 GitHub Pages 目录...
-copy /Y full_institution_map.html C:\Users\Administrator\jigou-gh-pages\index.html >nul
+echo [2/3] 复制并适配到 GitHub Pages...
+set SRC=full_institution_map.html
+set DST=C:\Users\Administrator\jigou-gh-pages\index.html
+
+:: Replace CDN paths with local leaflet copies
+powershell -Command "(Get-Content '%SRC%' -Raw) -replace 'https://cdn\.jsdelivr\.net/npm/leaflet@1\.9\.4/dist/leaflet\.css', 'leaflet/leaflet.css' -replace 'https://cdn\.jsdelivr\.net/npm/leaflet@1\.9\.4/dist/leaflet\.js', 'leaflet/leaflet.js' | Set-Content '%DST%' -NoNewline"
 echo OK
 
 echo.
@@ -34,7 +38,7 @@ if %ERRORLEVEL% EQU 0 (
     echo  https://qingshanoujx.github.io/jigou-map/
     echo ========================================
 ) else (
-    echo 推送失败，请检查 GitHub token
+    echo 推送失败，请检查 GitHub 配置
 )
 
 echo.
