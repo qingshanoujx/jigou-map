@@ -24,9 +24,13 @@
   .filter-btn:hover{border-color:#e74c3c;color:#e74c3c}
   .filter-btn.active{background:#e74c3c;color:#fff;border-color:#e74c3c}
   .filter-btn.all{background:#333;color:#fff;border-color:#333}
-  .search-section{padding:8px 16px;background:#fff;border-bottom:1px solid #e9ecef}
-  .search-section input{width:100%;padding:7px 10px;border:1px solid #ddd;border-radius:6px;font-size:13px;outline:none;transition:border 0.15s;box-sizing:border-box}
+  .search-section{padding:6px 12px;background:#fff;border-bottom:1px solid #e9ecef}
+  .search-row{display:flex;gap:4px;margin-bottom:4px}
+  .search-row:last-child{margin-bottom:0}
+  .search-label{font-size:10px;color:#888;white-space:nowrap;line-height:28px;min-width:48px;text-align:right}
+  .search-section input{flex:1;padding:4px 8px;border:1px solid #ddd;border-radius:4px;font-size:12px;outline:none;transition:border 0.15s;box-sizing:border-box}
   .search-section input:focus{border-color:#e74c3c}
+  .search-section input::placeholder{color:#bbb;font-size:11px}
   .stats-bar{display:flex;gap:0;background:#fff;padding:8px 16px;border-bottom:1px solid #e9ecef;font-size:12px}
   .stats-bar .stat{flex:1;text-align:center}
   .stats-bar .num{font-weight:bold;font-size:15px;color:#e74c3c;display:block}
@@ -73,7 +77,11 @@
         <label>&#128269; 筛选讲师</label>
         <div class="filter-btns" id="filter-btns"></div>
       </div>
-      <div class="search-section"><input type="text" id="search-input" placeholder="&#128269; 搜索机构名称、城市、负责人..." oninput="onSearch(this.value)"></div>
+      <div class="search-section">
+        <div class="search-row"><span class="search-label">&#128269; 机构</span><input type="text" id="search-name" placeholder="搜机构名称、城市..." oninput="onSearch()"></div>
+        <div class="search-row"><span class="search-label">&#128101; 渠道</span><input type="text" id="search-channel" placeholder="搜渠道经理..." oninput="onSearch()"></div>
+        <div class="search-row"><span class="search-label">&#128101; 人员</span><input type="text" id="search-member" placeholder="搜小组成员..." oninput="onSearch()"></div>
+      </div>
       <div class="stats-bar" id="stats-bar">
         <div class="stat"><span class="num" id="stat-inst">0</span><span class="lbl">机构</span></div>
         <div class="stat"><span class="num" id="stat-weekend">0</span><span class="lbl">周末场</span></div>
@@ -229,22 +237,30 @@ function toggleSidebar(){
 }
 
 // 搜索
-function onSearch(text){
-  var q = text.trim().toLowerCase();
-  if(!q){
+function onSearch(){
+  var qName = document.getElementById('search-name').value.trim().toLowerCase();
+  var qChannel = document.getElementById('search-channel').value.trim().toLowerCase();
+  var qMember = document.getElementById('search-member').value.trim().toLowerCase();
+  
+  if(!qName && !qChannel && !qMember){
     selectLecturer(currentLecturer);
     return;
   }
+  
   var matches = allMarkers.filter(function(d){
-    return (d.name && d.name.toLowerCase().includes(q)) ||
-           (d.city && d.city.toLowerCase().includes(q)) ||
-           (d.leader && d.leader.toLowerCase().includes(q)) ||
-           (d.lecturer && d.lecturer.toLowerCase().includes(q)) ||
-           (d.channel_mgr && d.channel_mgr.toLowerCase().includes(q));
+    var matchName = !qName || (d.name && d.name.toLowerCase().includes(qName)) ||
+                               (d.city && d.city.toLowerCase().includes(qName));
+    var matchChannel = !qChannel || (d.channel_mgr && d.channel_mgr.toLowerCase().includes(qChannel));
+    var matchMember = !qMember || (d.members && d.members.toLowerCase().includes(qMember));
+    return matchName && matchChannel && matchMember;
   });
   
+  // Clear old markers
   markers.forEach(function(m){map.removeLayer(m)});
+  if(currentPolyline) map.removeLayer(currentPolyline);
+  routeArrows.forEach(function(m){map.removeLayer(m)});
   markers = [];
+  routeArrows = [];
   
   matches.forEach(function(d, i){
     var color = d.isPending ? '#d35400' : (d.isWeekend ? '#c0392b' : '#1a5276');
